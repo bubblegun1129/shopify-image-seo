@@ -18,7 +18,7 @@ type ProcessedImage = {
   downloadUrl: string;
 };
 
-const MAX_FILES = 50;
+const MAX_FILES = 10;
 
 const sanitizeKeyword = (value: string) =>
   value
@@ -193,7 +193,6 @@ const App: React.FC = () => {
         }
 
         const seoName = `${cleanKeyword}-${indexStr}.${ext}`;
-        const originalSizeKb = +(input.file.size / 1024).toFixed(1);
         const finalSizeKb = +(finalBlob.size / 1024).toFixed(1);
         const savedPercent =
           originalSizeKb > 0
