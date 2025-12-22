@@ -259,9 +259,15 @@ const App: React.FC = () => {
     <div className="page">
       <nav className="top-nav">
         <div className="nav-container">
-          <div className="nav-logo">bubb-lab 实验室</div>
           <a
-            href="https://yourstudio.com/lab"
+            href="https://www.bubb-lab.com/lab"
+            className="nav-logo"
+            style={{ textDecoration: 'none', color: 'inherit' }}
+          >
+            bubb-lab 实验室
+          </a>
+          <a
+            href="https://www.bubb-lab.com/lab"
             target="_blank"
             rel="noopener noreferrer"
             className="nav-link"

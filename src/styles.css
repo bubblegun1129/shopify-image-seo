@@ -24,6 +24,12 @@
   font-weight: 600;
   color: #0f172a;
   letter-spacing: -0.02em;
+  cursor: pointer;
+  transition: opacity 0.15s;
+}
+
+.nav-logo:hover {
+  opacity: 0.7;
 }
 
 .nav-link {
@@ -85,6 +91,7 @@
 
 .hero-heading {
   max-width: 680px;
+  margin-top: 80px;
   margin-bottom: 22px;
 }
 
