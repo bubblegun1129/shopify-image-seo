@@ -257,6 +257,19 @@ const App: React.FC = () => {
 
   return (
     <div className="page">
+      <nav className="top-nav">
+        <div className="nav-container">
+          <div className="nav-logo">bubb-lab 实验室</div>
+          <a
+            href="https://yourstudio.com/lab"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="nav-link"
+          >
+            查看更多独立站运营工具
+          </a>
+        </div>
+      </nav>
       <header className="hero">
         <div className="hero-inner">
           <div className="hero-heading">
