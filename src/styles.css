@@ -360,9 +360,10 @@
 }
 
 .value-copy h2 {
-  margin: 0 0 10px;
+  margin: 20px 0 10px;
   font-size: 22px;
   letter-spacing: -0.03em;
+  text-align: center;
 }
 
 .value-copy p {
@@ -376,8 +377,8 @@
 }
 
 .stats-heading {
-  margin: 0 0 10px;
-  font-size: 18px;
+  margin: 0 0 20px;
+  font-size: 20px;
 }
 
 .stats-grid {
@@ -412,8 +413,9 @@
 }
 
 .how-section h2 {
-  margin: 0 0 10px;
+  margin: 0 0 20px;
   font-size: 18px;
+  text-align: center;
 }
 
 .how-grid {
@@ -659,7 +661,7 @@
   padding: 16px 18px 18px;
   border: 1px solid rgba(148, 163, 184, 0.7);
   color: #e5e7eb;
-  margin-bottom: 20px;
+  margin-bottom: 40px;
 }
 
 .footer-seo h2 {
@@ -684,8 +686,9 @@
 }
 
 .faq-section h2 {
-  margin: 0 0 8px;
+  margin: 0 0 20px;
   font-size: 18px;
+  text-align: center;
 }
 
 .faq-list {
@@ -713,7 +716,8 @@
   justify-content: space-between;
   align-items: center;
   gap: 8px;
-  font-size: 14px;
+  font-size: 16px;
+  font-weight: 600;
 }
 
 .faq-icon {
