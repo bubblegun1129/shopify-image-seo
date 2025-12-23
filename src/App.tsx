@@ -260,11 +260,11 @@ const App: React.FC = () => {
       <nav className="top-nav">
         <div className="nav-container">
           <a
-            href="https://www.bubb-lab.com/lab"
+            href="https://www.bubb-lab.com"
             className="nav-logo"
             style={{ textDecoration: 'none', color: 'inherit' }}
           >
-            bubb-lab 实验室
+            bubb-lab
           </a>
           <a
             href="https://www.bubb-lab.com/lab"
@@ -522,9 +522,9 @@ const App: React.FC = () => {
             </div>
             <div className="how-card">
               <span className="how-step-tag">步骤 3</span>
-              <h3>下载 ZIP 并上传到店铺</h3>
+              <h3>下载图片并上传到店铺</h3>
               <p>
-                将生成的 ZIP 包解压后，把命名规整、体积更小的图片（保留原格式）
+                把命名规整、体积更小的图片（保留原格式）
                 直接上传到商品详情和集合页，完成一次性优化。
               </p>
             </div>
@@ -618,6 +618,23 @@ const App: React.FC = () => {
           </div>
         </section>
       </main>
+
+      <footer className="page-footer">
+        <div className="footer-content">
+          <p>
+            © 2025{' '}
+            <a
+              href="https://www.bubb-lab.com"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="footer-link"
+            >
+              bubb-lab
+            </a>
+            . Built for eCommerce Creators.
+          </p>
+        </div>
+      </footer>
     </div>
   );
 };
