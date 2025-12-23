@@ -83,6 +83,7 @@ const messages: Record<
     stat2: string;
     stat3: string;
     stat4: string;
+    stat5: string;
     howTitle: string;
     howStep1Title: string;
     howStep1Desc: string;
@@ -157,6 +158,7 @@ const messages: Record<
     stat2: '图片相关工时节省',
     stat3: '集合页点击率提升',
     stat4: '处理过程在本地完成',
+    stat5: '累计处理图片数量',
     howTitle: '如何使用本工具优化你的商品图？',
     howStep1Title: '选择一组商品图片',
     howStep1Desc:
@@ -244,6 +246,7 @@ const messages: Record<
     stat2: 'Image ops time saved',
     stat3: 'Collection CTR uplift',
     stat4: 'Processing done locally',
+    stat5: 'Total images processed',
     howTitle: 'How to use this tool',
     howStep1Title: 'Pick a set of product images',
     howStep1Desc:
@@ -299,6 +302,9 @@ const App: React.FC = () => {
   const [showSeoPrompt, setShowSeoPrompt] = useState(false);
   const [faqOpenId, setFaqOpenId] = useState<string | null>('q1');
   const [lang, setLang] = useState<Lang>('zh');
+  const [totalProcessedCount, setTotalProcessedCount] = useState<number>(0);
+  const [faqClickCount, setFaqClickCount] = useState<number>(0);
+  const faqClickTimerRef = useRef<NodeJS.Timeout | null>(null);
   const userSelectedLang = useRef(false);
 
   const handleFiles = useCallback(
@@ -477,6 +483,15 @@ const App: React.FC = () => {
     setProcessed(results);
     setIsProcessing(false);
     setMessage(results.length ? messages[lang].messageDone : messages[lang].messageFail);
+    
+    // 更新总处理图片数量
+    if (results.length > 0) {
+      setTotalProcessedCount((prevCount) => {
+        const newTotal = prevCount + results.length;
+        localStorage.setItem('totalProcessedCount', String(newTotal));
+        return newTotal;
+      });
+    }
   }, [files, keyword, isSquare, lang]);
 
   const downloadZip = useCallback(async () => {
@@ -516,6 +531,15 @@ const App: React.FC = () => {
   };
 
   useEffect(() => {
+    // 从 localStorage 读取总处理图片数量
+    const savedCount = localStorage.getItem('totalProcessedCount');
+    if (savedCount) {
+      const count = parseInt(savedCount, 10);
+      if (!isNaN(count) && count >= 0) {
+        setTotalProcessedCount(count);
+      }
+    }
+    
     const saved = localStorage.getItem('lang') as Lang | null;
     if (saved === 'zh' || saved === 'en') {
       setLang(saved);
@@ -545,11 +569,46 @@ const App: React.FC = () => {
     };
   }, []);
 
+  // 清理FAQ点击定时器
+  useEffect(() => {
+    return () => {
+      if (faqClickTimerRef.current) {
+        clearTimeout(faqClickTimerRef.current);
+      }
+    };
+  }, []);
+
   const handleLangToggle = () => {
     const next = lang === 'zh' ? 'en' : 'zh';
     userSelectedLang.current = true;
     localStorage.setItem('lang', next);
     setLang(next);
+  };
+
+  const handleFaqTitleClick = () => {
+    // 清除之前的定时器
+    if (faqClickTimerRef.current) {
+      clearTimeout(faqClickTimerRef.current);
+    }
+
+    // 增加点击计数
+    const newCount = faqClickCount + 1;
+    setFaqClickCount(newCount);
+
+    // 如果连续点击3次，显示处理图片数量
+    if (newCount >= 3) {
+      const count = totalProcessedCount || 0;
+      const message = lang === 'zh' 
+        ? `累计处理图片数量：${count.toLocaleString()} 张`
+        : `Total images processed: ${count.toLocaleString()}`;
+      alert(message);
+      setFaqClickCount(0);
+    } else {
+      // 设置定时器，2秒后重置计数
+      faqClickTimerRef.current = setTimeout(() => {
+        setFaqClickCount(0);
+      }, 2000);
+    }
   };
 
   const t = messages[lang];
@@ -817,7 +876,9 @@ const App: React.FC = () => {
         </section>
 
         <section className="faq-section">
-          <h2>{t.faqTitle}</h2>
+          <h2 style={{ cursor: 'pointer', userSelect: 'none' }} onClick={handleFaqTitleClick}>
+            {t.faqTitle}
+          </h2>
           <div className="faq-list">
             <button
               type="button"
