@@ -565,17 +565,19 @@ const App: React.FC = () => {
           >
             {t.navLogo}
           </a>
-          <a
-            href="https://www.bubb-lab.com/lab"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="nav-link"
-          >
-            {t.navMore}
-          </a>
-          <button type="button" className="nav-lang" onClick={handleLangToggle}>
-            {lang === 'zh' ? 'EN' : '中'}
-          </button>
+          <div className="nav-actions">
+            <a
+              href="https://www.bubb-lab.com/lab"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="nav-link"
+            >
+              {t.navMore}
+            </a>
+            <button type="button" className="nav-lang" onClick={handleLangToggle}>
+              {lang === 'zh' ? 'EN' : '中'}
+            </button>
+          </div>
         </div>
       </nav>
       <header className="hero">
