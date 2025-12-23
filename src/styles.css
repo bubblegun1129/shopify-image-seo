@@ -50,6 +50,23 @@
   color: #1d4ed8;
 }
 
+.nav-lang {
+  margin-left: 10px;
+  padding: 6px 10px;
+  font-size: 12px;
+  border-radius: 8px;
+  border: 1px solid rgba(148, 163, 184, 0.6);
+  background: rgba(255, 255, 255, 0.85);
+  color: #0f172a;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.nav-lang:hover {
+  background: rgba(148, 163, 184, 0.15);
+  border-color: rgba(148, 163, 184, 0.8);
+}
+
 .page {
   min-height: 100vh;
   font-family: system-ui, -apple-system, BlinkMacSystemFont, 'SF Pro Text', sans-serif;
