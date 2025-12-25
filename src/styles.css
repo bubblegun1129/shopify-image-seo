@@ -89,7 +89,7 @@
 .hero {
   max-width: 1200px;
   margin: 0 auto;
-  padding: 80px 28px 60px;
+  padding: 60px 28px 10px;
 }
 
 .hero-inner {
@@ -106,7 +106,7 @@
 
 .hero-heading h1 {
   margin: 0 0 12px;
-  font-size: 54px;
+  font-size: 40px;
   font-weight: 600;
   letter-spacing: -0.003em;
   line-height: 1.07143;
@@ -115,7 +115,7 @@
 
 .hero-sub {
   margin: 0;
-  font-size: 16px;
+  font-size: 14px;
   color: #86868b;
   line-height: 1.381;
   font-weight: 400;
@@ -128,8 +128,8 @@
 
 .hero-drop .drop-area {
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
-  min-height: 280px;
-  padding: 60px 28px;
+  min-height: 180px;
+  padding: 40px 28px;
   border-radius: 20px;
   border: 2px dashed rgba(0, 0, 0, 0.15);
   background: #fbfbfd;
@@ -1006,7 +1006,7 @@
 
 .value-copy h2 {
   margin: 0 0 16px;
-  font-size: 38px;
+  font-size: 32px;
   font-weight: 600;
   letter-spacing: -0.003em;
   line-height: 1.1;
@@ -1030,7 +1030,7 @@
 
 .stats-heading {
   margin: 0 0 40px;
-  font-size: 38px;
+  font-size: 32px;
   font-weight: 600;
   letter-spacing: -0.003em;
   line-height: 1.1;
@@ -1055,7 +1055,7 @@
   font-size: 30px;
   font-weight: 600;
   letter-spacing: -0.003em;
-  color: #1d1d1f;
+  color: rgba(15, 129, 255, 1);
   margin-bottom: 8px;
 }
 
@@ -1128,7 +1128,7 @@
   border-radius: 24px;
   padding: 48px 40px;
   border: none;
-  margin-bottom: 60px;
+  margin-bottom: 40px;
 }
 
 .footer-seo h2 {

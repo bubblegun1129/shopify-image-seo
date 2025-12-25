@@ -83,7 +83,6 @@ const messages: Record<
     workflowStep3Desc: string;
     valueTitle: string;
     valueP1: string;
-    valueP2: string;
     statsHeading: string;
     stat1: string;
     stat2: string;
@@ -168,10 +167,7 @@ const messages: Record<
     workflowStep3Title: '下载图片并上传到店铺',
     workflowStep3Desc: '直接上传到商品详情和集合页，完成一次性优化。',
     valueTitle: '不用再为商品图拍摄与处理花费大量时间',
-    valueP1:
-      '只要有清晰的商品图片，你就可以通过在线压缩与统一命名，让它们在 Shopify 店铺中加载更快、更清晰，无需反复在 PS 和浏览器之间来回折腾。',
-    valueP2:
-      '无论你是个人卖家还是品牌团队，都可以把更多精力放在选品与获客成交，而不是机械的图片处理。',
+    valueP1: '只要有清晰的商品图片，你就可以通过在线压缩与统一命名，让它们在 Shopify 店铺中加载更快、更清晰，无需反复在 PS 和浏览器之间来回折腾。无论你是个人卖家还是品牌团队，都可以把更多精力放在选品与获客成交，而不是机械的图片处理。',
     statsHeading: '用更好的商品图，带来更好的结果',
     stat1: '平均页面加载速度提升',
     stat2: '图片相关工时节省',
@@ -269,10 +265,7 @@ const messages: Record<
     workflowStep3Desc:
       'Upload the renamed and smaller images directly to product pages and collections to finish optimization.',
     valueTitle: 'Save time on product image prep',
-    valueP1:
-      'With clear product photos, you can compress and rename online so Shopify pages load faster without bouncing between PS and your browser.',
-    valueP2:
-      'Whether you’re a solo seller or a team, spend more time on products and customers—not repetitive image work.',
+    valueP1: 'With clear product photos, you can compress and rename online so Shopify pages load faster without bouncing between PS and your browser. Whether you\'re a solo seller or a team, spend more time on products and customers—not repetitive image work.',
     statsHeading: 'Better images, better results',
     stat1: 'Page load speed uplift',
     stat2: 'Image ops time saved',
@@ -1162,7 +1155,6 @@ const App: React.FC = () => {
           <div className="value-copy">
             <h2>{t.valueTitle}</h2>
             <p>{t.valueP1}</p>
-            <p>{t.valueP2}</p>
           </div>
         </section>
 
