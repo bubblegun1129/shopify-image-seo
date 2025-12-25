@@ -1,10 +1,15 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import JSZip from 'jszip';
+import { extractKeywords } from './utils/imageClassifier';
 
 type InputImage = {
   id: string;
   file: File;
   previewUrl: string;
+  customKeyword?: string; // 单张图片的自定义关键词
+  forceSquare?: boolean; // 单张图片是否强制1:1
+  processingProgress?: number; // 处理进度 0-100
+  isProcessing?: boolean; // 是否正在处理
 };
 
 type ProcessedImage = {
@@ -51,6 +56,7 @@ const messages: Record<
     keywordHint: string;
     checkboxLabel: string;
     processButton: string;
+    downloadAll: string;
     downloadSingle: string;
     clear: string;
     messageLimit: (max: number) => string;
@@ -104,9 +110,21 @@ const messages: Record<
     faqA3: string;
     faqQ4: string;
     faqA4: string;
-    promptTitle: string;
-    promptP1: string;
-    promptP2: string;
+    aiButton: string;
+    aiRenameButton: string;
+    aiInitializing: string;
+    aiProcessing: (current: number, total: number) => string;
+    aiComplete: string;
+    aiError: string;
+    aiHint: string;
+    deleteImage: string;
+    renameImage: string;
+    compressImage: string;
+    editKeyword: string;
+    saveKeyword: string;
+    cancelEdit: string;
+    keywordPlaceholderSingle: string;
+    processingSingle: string;
   }
 > = {
   zh: {
@@ -124,6 +142,7 @@ const messages: Record<
     keywordHint: '将自动生成：关键词-序号.原格式，并清洗特殊字符与空格。',
     checkboxLabel: '强制 1:1 正方形（自动居中裁剪，适合商品列表）',
     processButton: '一键重命名并压缩',
+    downloadAll: '下载全部',
     downloadSingle: '下载图片',
     clear: '清空',
     messageLimit: (max: number) => `已达到单次 ${max} 张上限，为保证浏览器流畅度。`,
@@ -132,7 +151,7 @@ const messages: Record<
     messageDone: '处理完成，可下载图片。',
     messageFail: '处理失败，请重试或更换图片。',
     listTitle: (count: number) => `已导入图片（${count}）`,
-    listTip: '不会上传到任何服务器，所有处理均在你浏览器本地完成。',
+    listTip: 'AI可识别图片内容并生成alt关键词和序号',
     waiting: '等待处理…',
     tableHeadPreview: '图片预览',
     tableHeadOriginal: '原始文件名',
@@ -187,10 +206,22 @@ const messages: Record<
     faqQ4: '强制 1:1 裁剪会不会影响商品展示？',
     faqA4:
       '对于 Shopify 集合页或网格列表，统一 1:1 比例通常能带来更整洁的视觉效果；如果你的商品需要完整纵向展示，也可以关闭该选项保持原始比例。',
-    promptTitle: '想进一步诊断整店图片 SEO 么？',
-    promptP1:
-      '即将上线的「全店图片 SEO 诊断」可一键扫描你的 Shopify 商店，找出：未压缩图片、非 WebP 图片、文件名不友好的商品图等问题。',
-    promptP2: '现在留下邮箱，优先获得内测邀请（可选）：暂未接入表单，这里仅作文案预告。'
+    aiButton: '✨ 智能识别',
+    aiRenameButton: 'AI智能重命名',
+    aiInitializing: '正在分析文件名...',
+    aiProcessing: (current: number, total: number) =>
+      `正在分析图片 ${current}/${total}...`,
+    aiComplete: '分析完成！已自动填充关键词',
+    aiError: '分析失败，请手动输入关键词',
+    aiHint: '从文件名智能识别商品类型',
+    deleteImage: '删除',
+    renameImage: '重命名',
+    compressImage: '压缩',
+    editKeyword: '编辑关键词',
+    saveKeyword: '保存',
+    cancelEdit: '取消',
+    keywordPlaceholderSingle: '输入关键词',
+    processingSingle: '处理中...'
   },
   en: {
     navLogo: 'bubb-lab',
@@ -208,6 +239,7 @@ const messages: Record<
       'Will auto-generate: keyword-index.originalExt, with spaces/special characters cleaned.',
     checkboxLabel: 'Force 1:1 square (auto center-crop, good for product grids)',
     processButton: 'Rename & compress',
+    downloadAll: 'Download All',
     downloadSingle: 'Download image',
     clear: 'Clear',
     messageLimit: (max: number) =>
@@ -217,7 +249,7 @@ const messages: Record<
     messageDone: 'Processing completed. You can download the images.',
     messageFail: 'Processing failed. Please retry with other images.',
     listTitle: (count: number) => `Imported images (${count})`,
-    listTip: 'Nothing is uploaded to any server; all processing stays in your browser.',
+    listTip: 'AI can recognize image content and generate alt keywords with sequence numbers',
     waiting: 'Waiting to process…',
     tableHeadPreview: 'Preview',
     tableHeadOriginal: 'Original name',
@@ -277,11 +309,22 @@ const messages: Record<
     faqQ4: 'Will forcing 1:1 hurt my product display?',
     faqA4:
       'For collection grids, consistent 1:1 usually looks cleaner. If you need full-height shots, leave it off to keep the original ratio.',
-    promptTitle: 'Want a full-store image SEO audit?',
-    promptP1:
-      'Coming soon: scan your Shopify store to find uncompressed images, non-WebP assets, and unfriendly filenames.',
-    promptP2:
-      'Leave an email for early access (optional). No form is wired yet—this is a copy preview.'
+    aiButton: '✨ Smart Detect',
+    aiRenameButton: 'AI Smart Rename',
+    aiInitializing: 'Analyzing filenames...',
+    aiProcessing: (current: number, total: number) =>
+      `Analyzing image ${current}/${total}...`,
+    aiComplete: 'Analysis complete! Keywords auto-filled',
+    aiError: 'Analysis failed, please enter keywords manually',
+    aiHint: 'Smart detection from filename',
+    deleteImage: 'Delete',
+    renameImage: 'Rename',
+    compressImage: 'Compress',
+    editKeyword: 'Edit keyword',
+    saveKeyword: 'Save',
+    cancelEdit: 'Cancel',
+    keywordPlaceholderSingle: 'Enter keyword',
+    processingSingle: 'Processing...'
   }
 };
 
@@ -299,13 +342,17 @@ const App: React.FC = () => {
   const [isSquare, setIsSquare] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
-  const [showSeoPrompt, setShowSeoPrompt] = useState(false);
   const [faqOpenId, setFaqOpenId] = useState<string | null>('q1');
   const [lang, setLang] = useState<Lang>('zh');
   const [totalProcessedCount, setTotalProcessedCount] = useState<number>(0);
   const [faqClickCount, setFaqClickCount] = useState<number>(0);
   const faqClickTimerRef = useRef<NodeJS.Timeout | null>(null);
   const userSelectedLang = useRef(false);
+  const [hoveredItemId, setHoveredItemId] = useState<string | null>(null);
+  const [editingItemId, setEditingItemId] = useState<string | null>(null);
+  const [editingKeyword, setEditingKeyword] = useState<string>('');
+  const [aiProcessingItemId, setAiProcessingItemId] = useState<string | null>(null);
+  const [aiCompletedItemIds, setAiCompletedItemIds] = useState<Set<string>>(new Set());
 
   const handleFiles = useCallback(
     (fileList: FileList | null) => {
@@ -331,7 +378,6 @@ const App: React.FC = () => {
       }
       setFiles((prev) => [...prev, ...mapped]);
       setProcessed([]);
-      setShowSeoPrompt(false);
     },
     [files.length, lang]
   );
@@ -352,29 +398,28 @@ const App: React.FC = () => {
     [keyword, files.length, isProcessing]
   );
 
+  const hasProcessedImages = useMemo(
+    () => processed.length > 0,
+    [processed.length]
+  );
+
   const revokeDownloadUrls = (items: ProcessedImage[]) => {
     items.forEach((item) => {
       if (item.downloadUrl) URL.revokeObjectURL(item.downloadUrl);
     });
   };
 
-  const processImages = useCallback(async () => {
-    if (!files.length || !keyword.trim()) return;
-    setIsProcessing(true);
-    setMessage(messages[lang].messageProcessing);
-    setShowSeoPrompt(false);
-    revokeDownloadUrls(processed);
-
-    const cleanKeyword = sanitizeKeyword(keyword) || 'product';
-    const results: ProcessedImage[] = [];
-
-    for (let i = 0; i < files.length; i += 1) {
-      const input = files[i];
+  // 通用的单张图片处理函数
+  const processSingleImage = useCallback(
+    async (
+      input: InputImage,
+      keywordToUse: string,
+      forceSquareToUse: boolean,
+      index: number
+    ): Promise<ProcessedImage | null> => {
       try {
-        // 读取为 ImageBitmap / HTMLImageElement
         const blob = input.file;
         const imgBitmap = await createImageBitmap(blob).catch(async () => {
-          // 兼容性回退
           const img = await new Promise<HTMLImageElement>((resolve, reject) => {
             const image = new Image();
             image.onload = () => resolve(image);
@@ -394,7 +439,7 @@ const App: React.FC = () => {
         let sWidth = width;
         let sHeight = height;
 
-        if (isSquare) {
+        if (forceSquareToUse) {
           const size = Math.min(width, height);
           sWidth = size;
           sHeight = size;
@@ -446,18 +491,18 @@ const App: React.FC = () => {
           outputBlob = await toBlobAsync(preferredType, quality);
         }
 
-        const indexStr = String(i + 1).padStart(2, '0');
+        const indexStr = String(index + 1).padStart(2, '0');
         const originalSizeKb = +(input.file.size / 1024).toFixed(1);
 
         let ext = mimeToExt[preferredType] || 'jpg';
         let finalBlob = outputBlob;
 
-        // 如果压缩后反而更大，则退回使用原文件，避免体积变大导致负数百分比
         if (outputBlob.size > input.file.size) {
           finalBlob = input.file;
           ext = mimeToExt[originalType] || ext;
         }
 
+        const cleanKeyword = sanitizeKeyword(keywordToUse) || 'product';
         const seoName = `${cleanKeyword}-${indexStr}.${ext}`;
         const finalSizeKb = +(finalBlob.size / 1024).toFixed(1);
         const savedPercent =
@@ -465,7 +510,8 @@ const App: React.FC = () => {
             ? Math.max(0, +(((originalSizeKb - finalBlob.size / 1024) / originalSizeKb) * 100).toFixed(1))
             : 0;
         const downloadUrl = URL.createObjectURL(finalBlob);
-        results.push({
+
+        return {
           id: input.id,
           originalName: input.file.name,
           seoName,
@@ -474,9 +520,65 @@ const App: React.FC = () => {
           originalSizeKb,
           savedPercent,
           downloadUrl
-        });
+        };
       } catch (err) {
         console.error(err);
+        return null;
+      }
+    },
+    []
+  );
+
+  const processImages = useCallback(async () => {
+    if (!files.length || !keyword.trim()) return;
+    setIsProcessing(true);
+    setMessage(messages[lang].messageProcessing);
+    revokeDownloadUrls(processed);
+
+    // 设置所有文件为处理中状态
+    setFiles((prev) =>
+      prev.map((f) => ({ ...f, isProcessing: true, processingProgress: 0 }))
+    );
+
+    const results: ProcessedImage[] = [];
+
+    for (let i = 0; i < files.length; i += 1) {
+      const input = files[i];
+      // 使用单张图片的自定义关键词和设置，如果没有则使用全局设置
+      const keywordToUse = input.customKeyword || keyword;
+      const forceSquareToUse = input.forceSquare !== undefined ? input.forceSquare : isSquare;
+      
+      if (!keywordToUse.trim()) {
+        setFiles((prev) =>
+          prev.map((f) =>
+            f.id === input.id ? { ...f, isProcessing: false, processingProgress: undefined } : f
+          )
+        );
+        continue;
+      }
+
+      // 更新进度
+      const progress = Math.floor(((i + 1) / files.length) * 90);
+      setFiles((prev) =>
+        prev.map((f) =>
+          f.id === input.id ? { ...f, processingProgress: progress } : f
+        )
+      );
+
+      const result = await processSingleImage(input, keywordToUse, forceSquareToUse, i);
+      if (result) {
+        results.push(result);
+        setFiles((prev) =>
+          prev.map((f) =>
+            f.id === input.id ? { ...f, isProcessing: false, processingProgress: 100 } : f
+          )
+        );
+      } else {
+        setFiles((prev) =>
+          prev.map((f) =>
+            f.id === input.id ? { ...f, isProcessing: false, processingProgress: undefined } : f
+          )
+        );
       }
     }
 
@@ -484,7 +586,13 @@ const App: React.FC = () => {
     setIsProcessing(false);
     setMessage(results.length ? messages[lang].messageDone : messages[lang].messageFail);
     
-    // 更新总处理图片数量
+    // 延迟清除进度状态
+    setTimeout(() => {
+      setFiles((prev) =>
+        prev.map((f) => ({ ...f, isProcessing: false, processingProgress: undefined }))
+      );
+    }, 500);
+    
     if (results.length > 0) {
       setTotalProcessedCount((prevCount) => {
         const newTotal = prevCount + results.length;
@@ -492,7 +600,114 @@ const App: React.FC = () => {
         return newTotal;
       });
     }
-  }, [files, keyword, isSquare, lang]);
+  }, [files, keyword, isSquare, lang, processSingleImage]);
+
+  // 单张图片压缩
+  const compressSingleImage = useCallback(
+    async (imageId: string) => {
+      const image = files.find((f) => f.id === imageId);
+      if (!image) return;
+
+      const keywordToUse = image.customKeyword || keyword;
+      const forceSquareToUse = image.forceSquare !== undefined ? image.forceSquare : isSquare;
+
+      if (!keywordToUse.trim()) {
+        setMessage(lang === 'zh' ? '请先输入关键词' : 'Please enter a keyword first');
+        return;
+      }
+
+      const index = files.findIndex((f) => f.id === imageId);
+      const existingProcessed = processed.find((p) => p.id === imageId);
+      if (existingProcessed) {
+        URL.revokeObjectURL(existingProcessed.downloadUrl);
+      }
+
+      // 设置处理中状态
+      setFiles((prev) =>
+        prev.map((f) =>
+          f.id === imageId ? { ...f, isProcessing: true, processingProgress: 0 } : f
+        )
+      );
+
+      // 模拟进度更新
+      const progressInterval = setInterval(() => {
+        setFiles((prev) =>
+          prev.map((f) => {
+            if (f.id === imageId && f.isProcessing && f.processingProgress !== undefined) {
+              const newProgress = Math.min((f.processingProgress || 0) + 10, 90);
+              return { ...f, processingProgress: newProgress };
+            }
+            return f;
+          })
+        );
+      }, 200);
+
+      const result = await processSingleImage(image, keywordToUse, forceSquareToUse, index);
+      
+      clearInterval(progressInterval);
+      
+      if (result) {
+        setFiles((prev) =>
+          prev.map((f) =>
+            f.id === imageId ? { ...f, isProcessing: false, processingProgress: 100 } : f
+          )
+        );
+        setProcessed((prev) => {
+          const filtered = prev.filter((p) => p.id !== imageId);
+          return [...filtered, result];
+        });
+        setTotalProcessedCount((prevCount) => {
+          const newTotal = prevCount + 1;
+          localStorage.setItem('totalProcessedCount', String(newTotal));
+          return newTotal;
+        });
+        // 延迟清除进度状态
+        setTimeout(() => {
+          setFiles((prev) =>
+            prev.map((f) =>
+              f.id === imageId ? { ...f, isProcessing: false, processingProgress: undefined } : f
+            )
+          );
+        }, 500);
+      } else {
+        setFiles((prev) =>
+          prev.map((f) =>
+            f.id === imageId ? { ...f, isProcessing: false, processingProgress: undefined } : f
+          )
+        );
+        setMessage(lang === 'zh' ? '处理失败，请重试' : 'Processing failed, please retry');
+      }
+    },
+    [files, keyword, isSquare, processed, processSingleImage, lang]
+  );
+
+  // 单张图片删除
+  const deleteSingleImage = useCallback(
+    (imageId: string) => {
+      setFiles((prev) => {
+        const image = prev.find((f) => f.id === imageId);
+        if (image) {
+          URL.revokeObjectURL(image.previewUrl);
+        }
+        return prev.filter((f) => f.id !== imageId);
+      });
+      setProcessed((prev) => {
+        const processedItem = prev.find((p) => p.id === imageId);
+        if (processedItem) {
+          URL.revokeObjectURL(processedItem.downloadUrl);
+        }
+        return prev.filter((p) => p.id !== imageId);
+      });
+      // 清除AI完成状态
+      setAiCompletedItemIds((prev) => {
+        const next = new Set(prev);
+        next.delete(imageId);
+        return next;
+      });
+    },
+    []
+  );
+
 
   const downloadZip = useCallback(async () => {
     if (!processed.length) return;
@@ -507,7 +722,6 @@ const App: React.FC = () => {
     a.download = `shopify-image-seo-${Date.now()}.zip`;
     a.click();
     URL.revokeObjectURL(url);
-    setShowSeoPrompt(true);
   }, [processed]);
 
   const downloadSingle = useCallback(
@@ -520,15 +734,6 @@ const App: React.FC = () => {
     []
   );
 
-  const resetAll = () => {
-    files.forEach((f) => URL.revokeObjectURL(f.previewUrl));
-    revokeDownloadUrls(processed);
-    setFiles([]);
-    setProcessed([]);
-    setKeyword('');
-    setMessage(null);
-    setShowSeoPrompt(false);
-  };
 
   useEffect(() => {
     // 从 localStorage 读取总处理图片数量
@@ -539,7 +744,7 @@ const App: React.FC = () => {
         setTotalProcessedCount(count);
       }
     }
-    
+
     const saved = localStorage.getItem('lang') as Lang | null;
     if (saved === 'zh' || saved === 'en') {
       setLang(saved);
@@ -548,24 +753,35 @@ const App: React.FC = () => {
     const navLang = detectLangFromNavigator();
     setLang(navLang);
 
+    // 尝试通过 IP 检测地理位置（静默失败，不影响用户体验）
     let cancelled = false;
+    const timeoutId = setTimeout(() => {
+      cancelled = true; // 3秒后取消请求
+    }, 3000);
+
     fetch('https://ipapi.co/json/')
-      .then((res) => res.json())
+      .then((res) => {
+        if (!res.ok) throw new Error('Network response was not ok');
+        return res.json();
+      })
       .then((data) => {
         if (cancelled || userSelectedLang.current) return;
+        clearTimeout(timeoutId);
         const country = (data?.country_code || '').toUpperCase();
-        if (country === 'CN' || country === 'HK') {
+        if (country === 'CN' || country === 'HK' || country === 'TW' || country === 'MO') {
           setLang('zh');
         } else {
           setLang('en');
         }
       })
       .catch(() => {
-        /* ignore */
+        // 静默失败，保持浏览器语言检测的结果
+        clearTimeout(timeoutId);
       });
 
     return () => {
       cancelled = true;
+      clearTimeout(timeoutId);
     };
   }, []);
 
@@ -598,7 +814,7 @@ const App: React.FC = () => {
     // 如果连续点击3次，显示处理图片数量
     if (newCount >= 3) {
       const count = totalProcessedCount || 0;
-      const message = lang === 'zh' 
+      const message = lang === 'zh'
         ? `累计处理图片数量：${count.toLocaleString()} 张`
         : `Total images processed: ${count.toLocaleString()}`;
       alert(message);
@@ -612,6 +828,36 @@ const App: React.FC = () => {
   };
 
   const t = messages[lang];
+
+  // 单张图片的 AI 识别功能
+  const handleSingleImageAiDetect = useCallback(
+    async (imageId: string) => {
+      const image = files.find((f) => f.id === imageId);
+      if (!image) return;
+
+      setAiProcessingItemId(imageId);
+      setMessage(null);
+
+      try {
+        const detectedKeyword = await extractKeywords(image.file);
+        
+        // 设置该图片的自定义关键词
+        setFiles((prev) =>
+          prev.map((f) =>
+            f.id === imageId ? { ...f, customKeyword: detectedKeyword } : f
+          )
+        );
+
+        setAiCompletedItemIds((prev) => new Set(prev).add(imageId));
+      } catch (error) {
+        console.error('AI detection failed for image:', image.file.name, error);
+        setMessage(t.aiError);
+      } finally {
+        setAiProcessingItemId(null);
+      }
+    },
+    [files, t]
+  );
 
   return (
     <div className="page">
@@ -682,59 +928,25 @@ const App: React.FC = () => {
       <main className="main">
         <section className="panel panel-upload">
           <h2 className="section-title">{t.workflowStep2Title}</h2>
-          <p className="section-sub">{t.workflowStep2Desc}</p>
-          {!!files.length && (
-            <div className="list">
-              <div className="list-header">
-                <span>{t.listTitle(files.length)}</span>
-                <span className="list-tip">{t.listTip}</span>
-              </div>
-              <div className="thumbs">
-                {files.map((item, index) => {
-                  const matched = processed.find((p) => p.id === item.id);
-                  return (
-                    <div key={item.id} className="thumb">
-                      <img src={item.previewUrl} alt={item.file.name} />
-                      <div className="thumb-meta">
-                        <div className="thumb-line thumb-line-main">
-                          <span className="thumb-index">
-                            #{String(index + 1).padStart(2, '0')}
-                          </span>
-                          <span className="thumb-original" title={item.file.name}>
-                            {item.file.name}
-                          </span>
-                        </div>
-                        <div className="thumb-line">
-                          <span className="thumb-arrow">→</span>
-                          <span className="thumb-seo">
-                            {matched ? matched.seoName : t.waiting}
-                          </span>
-                          {matched && (
-                            <span className="thumb-size">
-                              {(matched.sizeKb / 1024).toFixed(2)} MB
-                            </span>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                  );
-                })}
+          
+          {/* 全局控制栏 */}
+          <div className="control-center">
+            <div className="control-center-left">
+              <div className="global-keyword-field">
+                <span className="global-keyword-label">{t.keywordLabel}</span>
+                <input
+                  type="text"
+                  className="global-keyword-input"
+                  placeholder={t.keywordPlaceholder}
+                  value={keyword}
+                  onChange={(e) => setKeyword(e.target.value)}
+                />
+                <span className="global-keyword-hint">{t.keywordHint}</span>
               </div>
             </div>
-          )}
+          </div>
 
           <div className="control-row">
-            <label className="field">
-              <span className="field-label">{t.keywordLabel}</span>
-              <input
-                type="text"
-                placeholder={t.keywordPlaceholder}
-                value={keyword}
-                onChange={(e) => setKeyword(e.target.value)}
-              />
-              <span className="field-hint">{t.keywordHint}</span>
-            </label>
-
             <label className="checkbox">
               <input
                 type="checkbox"
@@ -745,76 +957,205 @@ const App: React.FC = () => {
             </label>
           </div>
 
+          {!!files.length && (
+            <div className="list">
+              <div className="file-list">
+                {files.map((item, index) => {
+                  const matched = processed.find((p) => p.id === item.id);
+                  const displayKeyword = item.customKeyword || keyword;
+                  const isProcessingSingle = item.isProcessing || (isProcessing && files.length === 1 && files[0].id === item.id);
+                  const fileSizeMB = (item.file.size / 1024 / 1024).toFixed(1);
+                  const originalSizeMB = matched ? (matched.originalSizeKb / 1024).toFixed(1) : null;
+                  const processedSizeMB = matched ? (matched.sizeKb / 1024).toFixed(1) : null;
+                  const savedPercent = matched ? matched.savedPercent : null;
+                  
+                  // 生成预览文件名
+                  const generatePreviewName = () => {
+                    if (!displayKeyword.trim()) return t.waiting;
+                    const cleanKeyword = sanitizeKeyword(displayKeyword) || 'product';
+                    const indexStr = String(index + 1).padStart(2, '0');
+                    const ext = item.file.name.split('.').pop() || 'jpg';
+                    return `${cleanKeyword}-${indexStr}.${ext}`;
+                  };
+                  const previewName = matched ? matched.seoName : generatePreviewName();
+
+                  return (
+                    <div
+                      key={item.id}
+                      className="file-item"
+                      onMouseEnter={() => setHoveredItemId(item.id)}
+                      onMouseLeave={() => {
+                        setHoveredItemId(null);
+                        if (editingItemId !== item.id) {
+                          setEditingItemId(null);
+                          setEditingKeyword('');
+                        }
+                      }}
+                    >
+                      <div className="file-item-main">
+                        <div className="file-preview">
+                          <img src={item.previewUrl} alt={item.file.name} />
+                        </div>
+                        <div className="file-info">
+                          <div className="file-name-row">
+                            <span className="file-name">{item.file.name}</span>
+                            <span className="file-arrow">→</span>
+                            <span className="file-preview-name" title={previewName}>
+                              {previewName}
+                            </span>
+                            {hoveredItemId === item.id && !matched && !isProcessingSingle && (
+                              <button
+                                type="button"
+                                className="file-edit-icon"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setEditingItemId(item.id);
+                                  setEditingKeyword(item.customKeyword || '');
+                                }}
+                                title={t.editKeyword}
+                              >
+                                ✏️
+                              </button>
+                            )}
+                            {editingItemId === item.id && (
+                              <div className="file-inline-edit">
+                                <input
+                                  type="text"
+                                  className="file-inline-input"
+                                  value={editingKeyword}
+                                  onChange={(e) => setEditingKeyword(e.target.value)}
+                                  placeholder={keyword.trim() || t.keywordPlaceholderSingle}
+                                  autoFocus
+                                  onKeyDown={(e) => {
+                                    if (e.key === 'Enter') {
+                                      setFiles((prev) =>
+                                        prev.map((f) =>
+                                          f.id === item.id
+                                            ? { ...f, customKeyword: editingKeyword.trim() || undefined }
+                                            : f
+                                        )
+                                      );
+                                      setEditingItemId(null);
+                                      setEditingKeyword('');
+                                      if (matched) {
+                                        setTimeout(() => compressSingleImage(item.id), 300);
+                                      }
+                                    } else if (e.key === 'Escape') {
+                                      setEditingItemId(null);
+                                      setEditingKeyword('');
+                                    }
+                                  }}
+                                  onBlur={() => {
+                                    setFiles((prev) =>
+                                      prev.map((f) =>
+                                        f.id === item.id
+                                          ? { ...f, customKeyword: editingKeyword.trim() || undefined }
+                                          : f
+                                      )
+                                    );
+                                    setEditingItemId(null);
+                                    setEditingKeyword('');
+                                    if (matched) {
+                                      setTimeout(() => compressSingleImage(item.id), 300);
+                                    }
+                                  }}
+                                />
+                              </div>
+                            )}
+                          </div>
+                          <div className="file-details">
+                            {matched ? (
+                              <>
+                                <span className="file-size-original">{originalSizeMB} MB</span>
+                                <span className="file-arrow">→</span>
+                                <span className="file-size-processed">{processedSizeMB} MB</span>
+                                <span className="file-saved">-{savedPercent}%</span>
+                                <span className="file-status file-status-success">{t.messageDone}</span>
+                              </>
+                            ) : isProcessingSingle ? (
+                              <>
+                                <span className="file-size">{fileSizeMB} MB</span>
+                                <span className="file-status file-status-processing">
+                                  {t.messageProcessing}
+                                </span>
+                                <div className="file-progress">
+                                  <div className="file-progress-bar" style={{ width: `${item.processingProgress || 50}%` }}></div>
+                                </div>
+                              </>
+                            ) : aiProcessingItemId === item.id ? (
+                              <>
+                                <span className="file-size">{fileSizeMB} MB</span>
+                                <span className="file-status file-status-ai">
+                                  {t.aiInitializing}
+                                </span>
+                                <div className="file-progress file-progress-ai">
+                                  <div className="file-progress-bar file-progress-bar-ai"></div>
+                                </div>
+                              </>
+                            ) : (
+                              <>
+                                <span className="file-size">{fileSizeMB} MB</span>
+                                <span className="file-status file-status-waiting">{t.waiting}</span>
+                              </>
+                            )}
+                          </div>
+                        </div>
+                        <div className="file-actions">
+                          {matched ? (
+                            <button
+                              type="button"
+                              className="file-action-btn file-action-download"
+                              onClick={() => downloadSingle(matched)}
+                              title={t.downloadSingle}
+                            >
+                              {t.downloadSingle}
+                            </button>
+                          ) : (
+                            <>
+                              {aiCompletedItemIds.has(item.id) ? (
+                                <span className="file-action-complete">{t.aiComplete}</span>
+                              ) : (
+                                <button
+                                  type="button"
+                                  className="file-action-btn file-action-ai"
+                                  onClick={() => handleSingleImageAiDetect(item.id)}
+                                  disabled={aiProcessingItemId === item.id || isProcessingSingle}
+                                  title={t.aiHint}
+                                >
+                                  {aiProcessingItemId === item.id ? '⏳' : t.aiRenameButton}
+                                </button>
+                              )}
+                              <button
+                                type="button"
+                                className="file-action-btn file-action-delete"
+                                onClick={() => deleteSingleImage(item.id)}
+                                title={t.deleteImage}
+                              >
+                                ×
+                              </button>
+                            </>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
           {message && <div className="message">{message}</div>}
 
           <div className="actions-row">
             <button
               type="button"
               className="btn-primary"
-              disabled={!canProcess}
-              onClick={processImages}
+              disabled={hasProcessedImages ? false : !canProcess}
+              onClick={hasProcessedImages ? downloadZip : processImages}
             >
-              {isProcessing ? t.messageProcessing : t.processButton}
+              {isProcessing ? t.messageProcessing : hasProcessedImages ? t.downloadAll : t.processButton}
             </button>
-            {!!files.length && (
-              <button type="button" className="btn-text" onClick={resetAll}>
-                {t.clear}
-              </button>
-            )}
           </div>
-
-          {!!processed.length && (
-            <div className="result-table">
-              <div className="table-head">
-                <span>{t.tableHeadPreview}</span>
-                <span>{t.tableHeadOriginal}</span>
-                <span>{t.tableHeadNew}</span>
-                <span>{t.tableHeadBefore}</span>
-                <span>{t.tableHeadAfter}</span>
-                <span>{t.tableHeadSaving}</span>
-                <span>{t.tableHeadAction}</span>
-              </div>
-              {processed.map((item, idx) => {
-                const input = files.find((f) => f.id === item.id);
-                return (
-                  <div className="table-row" key={item.id}>
-                    <div className="table-thumb">
-                      {input ? <img src={input.previewUrl} alt={item.originalName} /> : null}
-                      <span className="table-index">#{String(idx + 1).padStart(2, '0')}</span>
-                    </div>
-                    <span className="table-text" title={item.originalName}>
-                      {item.originalName}
-                    </span>
-                    <span className="table-text" title={item.seoName}>
-                      {item.seoName}
-                    </span>
-                    <span className="table-mono">
-                      {(item.originalSizeKb / 1024).toFixed(2)} MB
-                    </span>
-                    <span className="table-mono">
-                      {(item.sizeKb / 1024).toFixed(2)} MB
-                    </span>
-                    <span className="table-mono table-saving">-{item.savedPercent}%</span>
-                    <button
-                      type="button"
-                      className="btn-outline btn-sm"
-                      onClick={() => downloadSingle(item)}
-                    >
-                      {t.downloadSingle}
-                    </button>
-                  </div>
-                );
-              })}
-            </div>
-          )}
-
-          {showSeoPrompt && (
-            <div className="prompt">
-              <h3>{t.promptTitle}</h3>
-              <p>{t.promptP1}</p>
-              <p className="prompt-sub">{t.promptP2}</p>
-            </div>
-          )}
         </section>
 
         <section className="value-section value-section-text-only">
