@@ -41,6 +41,139 @@ const mimeToExt: Record<string, string> = {
 
 type Lang = 'zh' | 'en';
 
+type Platform = 'all' | 'shopify' | 'woocommerce' | 'wix' | 'squarespace';
+
+const platforms: Record<
+  Lang,
+  Array<{ value: Platform; label: string; shortLabel: string }>
+> = {
+  zh: [
+    { value: 'all', label: '所有平台', shortLabel: '全部' },
+    { value: 'shopify', label: 'Shopify', shortLabel: 'Shopify' },
+    { value: 'woocommerce', label: 'WooCommerce', shortLabel: 'WooCommerce' },
+    { value: 'wix', label: 'Wix', shortLabel: 'Wix' },
+    { value: 'squarespace', label: 'Squarespace', shortLabel: 'Squarespace' }
+  ],
+  en: [
+    { value: 'all', label: 'All Platforms', shortLabel: 'All' },
+    { value: 'shopify', label: 'Shopify', shortLabel: 'Shopify' },
+    { value: 'woocommerce', label: 'WooCommerce', shortLabel: 'WooCommerce' },
+    { value: 'wix', label: 'Wix', shortLabel: 'Wix' },
+    { value: 'squarespace', label: 'Squarespace', shortLabel: 'Squarespace' }
+  ]
+};
+
+const getPlatformText = (platform: Platform, lang: Lang): string => {
+  const platformNames: Record<Platform, Record<Lang, string>> = {
+    all: {
+      zh: 'Shopify、WooCommerce、Wix、Squarespace 等电商平台',
+      en: 'Shopify, WooCommerce, Wix, Squarespace, and more'
+    },
+    shopify: {
+      zh: 'Shopify',
+      en: 'Shopify'
+    },
+    woocommerce: {
+      zh: 'WooCommerce',
+      en: 'WooCommerce'
+    },
+    wix: {
+      zh: 'Wix',
+      en: 'Wix'
+    },
+    squarespace: {
+      zh: 'Squarespace',
+      en: 'Squarespace'
+    }
+  };
+  return platformNames[platform][lang];
+};
+
+// 平台图标和提示信息
+const platformInfo: Record<
+  Platform,
+  {
+    icon: string;
+    tips: Record<Lang, string[]>;
+  }
+> = {
+  all: {
+    icon: '🌐',
+    tips: {
+      zh: [
+        '适用于所有主流电商平台',
+        '统一的图片 SEO 优化标准',
+        '提升页面加载速度和用户体验'
+      ],
+      en: [
+        'Works with all major eCommerce platforms',
+        'Unified image SEO optimization standards',
+        'Improves page load speed and user experience'
+      ]
+    }
+  },
+  shopify: {
+    icon: '🛍️',
+    tips: {
+      zh: [
+        'Shopify 推荐使用 1:1 正方形图片',
+        '文件名使用英文更利于 SEO',
+        '建议图片大小控制在 200KB 以内'
+      ],
+      en: [
+        'Shopify recommends 1:1 square images',
+        'English filenames are better for SEO',
+        'Keep image size under 200KB for best performance'
+      ]
+    }
+  },
+  woocommerce: {
+    icon: '🛒',
+    tips: {
+      zh: [
+        'WooCommerce 支持多种图片尺寸',
+        '建议使用描述性的文件名',
+        '可以批量上传到媒体库'
+      ],
+      en: [
+        'WooCommerce supports multiple image sizes',
+        'Use descriptive filenames for better SEO',
+        'Batch upload to media library supported'
+      ]
+    }
+  },
+  wix: {
+    icon: '🎨',
+    tips: {
+      zh: [
+        'Wix 自动优化图片大小',
+        '建议使用清晰的商品图片',
+        '文件名会影响搜索排名'
+      ],
+      en: [
+        'Wix automatically optimizes image sizes',
+        'Use clear product images',
+        'Filenames affect search rankings'
+      ]
+    }
+  },
+  squarespace: {
+    icon: '📐',
+    tips: {
+      zh: [
+        'Squarespace 支持高质量图片',
+        '建议使用统一的命名规范',
+        '优化后的图片加载更快'
+      ],
+      en: [
+        'Squarespace supports high-quality images',
+        'Use consistent naming conventions',
+        'Optimized images load faster'
+      ]
+    }
+  }
+};
+
 const messages: Record<
   Lang,
   {
@@ -129,9 +262,9 @@ const messages: Record<
   zh: {
     navLogo: 'bubb-lab',
     navMore: '查看更多独立站运营工具',
-    heroTitle: '为 Shopify 店铺批量优化商品图',
+    heroTitle: '为电商平台批量优化商品图',
     heroSub:
-      '只需上传图片和填写一个关键词，即可完成图片重命名与压缩，准备好适合上架的高质量商品图。',
+      '只需上传图片和填写一个关键词，即可完成图片重命名与压缩，准备好适合上架到 Shopify、WooCommerce、Wix 等平台的高质量商品图。',
     dropTitle: '拖拽图片到此，或点击选择文件',
     dropSub: (max: number) =>
       `支持 JPG / PNG / WEBP / HEIC，单次最多 ${max} 张，所有处理均在你浏览器本地完成。`,
@@ -159,15 +292,15 @@ const messages: Record<
     tableHeadAfter: '压缩后',
     tableHeadSaving: '节省',
     tableHeadAction: '操作',
-    workflowTitle: '三步完成 Shopify 商品图 SEO 处理',
+    workflowTitle: '三步完成商品图 SEO 处理',
     workflowStep1Title: '选择一组商品图片',
-    workflowStep1Desc: '上传你准备上架到 Shopify / 独立站的商品图，支持日常拍摄或已有商品图。',
+    workflowStep1Desc: '上传你准备上架到 Shopify、WooCommerce、Wix、Squarespace 等电商平台的商品图，支持日常拍摄或已有商品图。',
     workflowStep2Title: '输入核心关键词并本地压缩',
     workflowStep2Desc: '工具会在浏览器内将图片自动裁剪为 1:1（可选）并压缩为轻量格式。',
     workflowStep3Title: '下载图片并上传到店铺',
     workflowStep3Desc: '直接上传到商品详情和集合页，完成一次性优化。',
     valueTitle: '不用再为商品图拍摄与处理花费大量时间',
-    valueP1: '只要有清晰的商品图片，你就可以通过在线压缩与统一命名，让它们在 Shopify 店铺中加载更快、更清晰，无需反复在 PS 和浏览器之间来回折腾。无论你是个人卖家还是品牌团队，都可以把更多精力放在选品与获客成交，而不是机械的图片处理。',
+    valueP1: '只要有清晰的商品图片，你就可以通过在线压缩与统一命名，让它们在 Shopify、WooCommerce 等电商平台中加载更快、更清晰，无需反复在 PS 和浏览器之间来回折腾。无论你是个人卖家还是品牌团队，都可以把更多精力放在选品与获客成交，而不是机械的图片处理。',
     statsHeading: '用更好的商品图，带来更好的结果',
     stat1: '平均页面加载速度提升',
     stat2: '图片相关工时节省',
@@ -177,18 +310,18 @@ const messages: Record<
     howTitle: '如何使用本工具优化你的商品图？',
     howStep1Title: '选择一组商品图片',
     howStep1Desc:
-      '将你准备上架到 Shopify 的商品图拖入页面，或点击按钮选择已有图片文件，支持常见电商图像格式。',
+      '将你准备上架到电商平台的商品图拖入页面，或点击按钮选择已有图片文件，支持常见电商图像格式。',
     howStep2Title: '输入关键词并开始本地处理',
     howStep2Desc: '填写一个核心关键词，选择是否强制 1:1，然后一键启动本地压缩与重命名。',
     howStep3Title: '下载图片并上传到店铺',
     howStep3Desc: '把命名规整、体积更小的图片直接上传到商品详情和集合页，完成一次性优化。',
-    footerSeoTitle: '为什么图片 SEO 对 Shopify 店铺这么重要？',
+    footerSeoTitle: '为什么图片 SEO 优化 对电商网站这么重要？',
     footerSeoP1:
       '像 IMG_001.jpg 这样的文件名，对搜索引擎几乎没有任何语义信息；而 summer-silk-dress-01.jpg 则能明确告诉搜索引擎这是哪一类商品。',
     footerSeoP2:
       '通过统一命名并适度压缩，你可以在不牺牲清晰度的前提下显著减小图片体积，提升 PageSpeed 分数，降低跳出率，并在自然搜索与广告投放中获得更高转化。',
     footerSeoP3:
-      '相比复杂的 SaaS 平台，这个工具更像是一个「上架前图片整理工作台」，一次性把文件名、比例与体积都处理好，再上传到 Shopify 商品与集合页。',
+      '相比复杂的 SaaS 平台，这个工具更像是一个「上架前图片整理工作台」，一次性把文件名、比例与体积都处理好，再上传到 Shopify、WooCommerce、Wix 等平台的商品与集合页。',
     faqTitle: '关于图片 SEO：常见问题解答',
     faqQ1: '这个工具会把图片上传到服务器吗？',
     faqA1:
@@ -201,7 +334,7 @@ const messages: Record<
       '建议优先使用英文或拼音，有助于欧美市场的搜索引擎更好理解；如果主要面向本地市场，也可以使用中文，我们会自动处理空格和特殊字符。',
     faqQ4: '强制 1:1 裁剪会不会影响商品展示？',
     faqA4:
-      '对于 Shopify 集合页或网格列表，统一 1:1 比例通常能带来更整洁的视觉效果；如果你的商品需要完整纵向展示，也可以关闭该选项保持原始比例。',
+      '对于电商平台的集合页或网格列表，统一 1:1 比例通常能带来更整洁的视觉效果；如果你的商品需要完整纵向展示，也可以关闭该选项保持原始比例。',
     aiButton: '✨ 智能识别',
     aiRenameButton: 'AI智能重命名',
     aiInitializing: '正在分析文件名...',
@@ -222,9 +355,9 @@ const messages: Record<
   en: {
     navLogo: 'bubb-lab',
     navMore: 'Explore more eCommerce tools',
-    heroTitle: 'Optimize Shopify product images in bulk',
+    heroTitle: 'Optimize eCommerce product images in bulk',
     heroSub:
-      'Just upload images and enter one keyword to batch rename and compress locally—ready for listing in minutes.',
+      'Just upload images and enter one keyword to batch rename and compress locally—ready for listing on Shopify, WooCommerce, Wix, and more.',
     dropTitle: 'Drag images here or click to select',
     dropSub: (max: number) =>
       `Supports JPG / PNG / WEBP / HEIC, up to ${max} images per batch. All processing happens locally in your browser.`,
@@ -254,10 +387,10 @@ const messages: Record<
     tableHeadAfter: 'After',
     tableHeadSaving: 'Saving',
     tableHeadAction: 'Action',
-    workflowTitle: '3 steps to optimize Shopify images',
+    workflowTitle: '3 steps to optimize product images',
     workflowStep1Title: 'Choose your product images',
     workflowStep1Desc:
-      'Upload the product photos you plan to list on Shopify / your site; everyday shots or existing images are fine.',
+      'Upload the product photos you plan to list on Shopify, WooCommerce, Wix, Squarespace, or any eCommerce platform; everyday shots or existing images are fine.',
     workflowStep2Title: 'Enter a keyword and compress locally',
     workflowStep2Desc:
       'We can auto crop to 1:1 (optional) and compress in your browser without uploading to servers.',
@@ -265,7 +398,7 @@ const messages: Record<
     workflowStep3Desc:
       'Upload the renamed and smaller images directly to product pages and collections to finish optimization.',
     valueTitle: 'Save time on product image prep',
-    valueP1: 'With clear product photos, you can compress and rename online so Shopify pages load faster without bouncing between PS and your browser. Whether you\'re a solo seller or a team, spend more time on products and customers—not repetitive image work.',
+    valueP1: 'With clear product photos, you can compress and rename online so your eCommerce pages load faster without bouncing between PS and your browser. Whether you\'re a solo seller or a team, spend more time on products and customers—not repetitive image work.',
     statsHeading: 'Better images, better results',
     stat1: 'Page load speed uplift',
     stat2: 'Image ops time saved',
@@ -275,20 +408,20 @@ const messages: Record<
     howTitle: 'How to use this tool',
     howStep1Title: 'Pick a set of product images',
     howStep1Desc:
-      'Drag your Shopify product images into the page or click to select. Common ecom formats are supported.',
+      'Drag your product images into the page or click to select. Common eCommerce formats are supported.',
     howStep2Title: 'Enter a keyword and start processing',
     howStep2Desc:
       'Fill a core keyword, choose whether to force 1:1, then run one-click local compression and rename.',
     howStep3Title: 'Download images and upload to store',
     howStep3Desc:
       'Upload the renamed, smaller images directly to product and collection pages to finish optimization.',
-    footerSeoTitle: 'Why image SEO matters for Shopify',
+    footerSeoTitle: 'Why image SEO matters for eCommerce',
     footerSeoP1:
       'A filename like IMG_001.jpg tells search engines nothing; summer-silk-dress-01.jpg clearly signals the product category.',
     footerSeoP2:
       'Consistent naming plus smart compression reduces file size without losing clarity, boosts PageSpeed, lowers bounce, and improves conversions.',
     footerSeoP3:
-      'Think of this as a “pre-upload image workstation” to fix names, ratios, and sizes before pushing to Shopify products and collections.',
+      'Think of this as a "pre-upload image workstation" to fix names, ratios, and sizes before pushing to Shopify, WooCommerce, Wix, or any eCommerce platform.',
     faqTitle: 'Image SEO FAQs',
     faqQ1: 'Does this tool upload images to a server?',
     faqA1:
@@ -337,6 +470,8 @@ const App: React.FC = () => {
   const [message, setMessage] = useState<string | null>(null);
   const [faqOpenId, setFaqOpenId] = useState<string | null>('q1');
   const [lang, setLang] = useState<Lang>('zh');
+  const platform: Platform = 'all'; // 固定为 'all'，不再提供选择
+  const [currentPlatformIndex, setCurrentPlatformIndex] = useState<number>(0);
   const [totalProcessedCount, setTotalProcessedCount] = useState<number>(0);
   const [faqClickCount, setFaqClickCount] = useState<number>(0);
   const faqClickTimerRef = useRef<NodeJS.Timeout | null>(null);
@@ -712,7 +847,7 @@ const App: React.FC = () => {
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `shopify-image-seo-${Date.now()}.zip`;
+    a.download = `ecommerce-image-seo-${Date.now()}.zip`;
     a.click();
     URL.revokeObjectURL(url);
   }, [processed]);
@@ -787,12 +922,23 @@ const App: React.FC = () => {
     };
   }, []);
 
+  // 平台名称循环切换动画
+  useEffect(() => {
+    const platformList: Platform[] = ['shopify', 'woocommerce', 'wix', 'squarespace'];
+    const interval = setInterval(() => {
+      setCurrentPlatformIndex((prev) => (prev + 1) % platformList.length);
+    }, 2500); // 每2.5秒切换一次，给动画更多时间
+
+    return () => clearInterval(interval);
+  }, []);
+
   const handleLangToggle = () => {
     const next = lang === 'zh' ? 'en' : 'zh';
     userSelectedLang.current = true;
     localStorage.setItem('lang', next);
     setLang(next);
   };
+
 
   const handleFaqTitleClick = () => {
     // 清除之前的定时器
@@ -821,6 +967,36 @@ const App: React.FC = () => {
   };
 
   const t = messages[lang];
+  
+  // 根据平台动态替换文案中的平台名称
+  const getText = (key: keyof typeof t, defaultText?: string): string => {
+    const text = defaultText || (typeof t[key] === 'string' ? t[key] : '');
+    if (platform === 'all') return text;
+    
+    const platformText = getPlatformText(platform, lang);
+    const allPlatformText = getPlatformText('all', lang);
+    
+    // 替换文案中的平台名称
+    return text
+      .replace(new RegExp(allPlatformText.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'g'), platformText)
+      .replace(/Shopify、WooCommerce、Wix、Squarespace 等电商平台/g, platformText)
+      .replace(/Shopify, WooCommerce, Wix, Squarespace, and more/g, platformText)
+      .replace(/电商平台/g, platform === 'shopify' ? 'Shopify' : platformText)
+      .replace(/eCommerce/g, platformText);
+  };
+  
+  // 获取动态文案的辅助函数
+  const getDynamicText = (baseText: string): string => {
+    if (platform === 'all') return baseText;
+    const platformText = getPlatformText(platform, lang);
+    const allPlatformText = getPlatformText('all', lang);
+    return baseText
+      .replace(new RegExp(allPlatformText.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'g'), platformText)
+      .replace(/Shopify、WooCommerce、Wix、Squarespace 等电商平台/g, platformText)
+      .replace(/Shopify, WooCommerce, Wix, Squarespace, and more/g, platformText)
+      .replace(/电商平台/g, platform === 'shopify' ? 'Shopify' : platformText)
+      .replace(/eCommerce/g, platformText);
+  };
 
   // 单张图片的 AI 识别功能
   const handleSingleImageAiDetect = useCallback(
@@ -881,8 +1057,22 @@ const App: React.FC = () => {
       <header className="hero">
         <div className="hero-inner">
           <div className="hero-heading">
-            <h1>{t.heroTitle}</h1>
-            <p className="hero-sub">{t.heroSub}</p>
+            <h1>
+              {lang === 'zh' ? (
+                <>
+                  为 <span className="platform-rotating-wrapper">
+                    <span className="platform-rotating" key={`platform-zh-${currentPlatformIndex}`}>{getPlatformText(['shopify', 'woocommerce', 'wix', 'squarespace'][currentPlatformIndex] as Platform, lang)}</span>
+                  </span> 批量优化商品图
+                </>
+              ) : (
+                <>
+                  Optimize <span className="platform-rotating-wrapper">
+                    <span className="platform-rotating" key={`platform-en-${currentPlatformIndex}`}>{getPlatformText(['shopify', 'woocommerce', 'wix', 'squarespace'][currentPlatformIndex] as Platform, lang)}</span>
+                  </span> product images in bulk
+                </>
+              )}
+            </h1>
+            <p className="hero-sub">{getDynamicText(t.heroSub)}</p>
           </div>
 
           <div className="hero-drop">
@@ -1154,7 +1344,7 @@ const App: React.FC = () => {
         <section className="value-section value-section-text-only">
           <div className="value-copy">
             <h2>{t.valueTitle}</h2>
-            <p>{t.valueP1}</p>
+            <p>{getDynamicText(t.valueP1)}</p>
           </div>
         </section>
 
@@ -1186,7 +1376,7 @@ const App: React.FC = () => {
             <div className="how-card">
               <span className="how-step-tag">{lang === 'zh' ? '步骤 1' : 'Step 1'}</span>
               <h3>{t.howStep1Title}</h3>
-              <p>{t.howStep1Desc}</p>
+              <p>{getDynamicText(t.howStep1Desc)}</p>
             </div>
             <div className="how-card">
               <span className="how-step-tag">{lang === 'zh' ? '步骤 2' : 'Step 2'}</span>
@@ -1201,11 +1391,54 @@ const App: React.FC = () => {
           </div>
         </section>
 
+        {/* Use Cases Section */}
+        <section className="use-cases-section">
+          <h2>{lang === 'zh' ? '适用场景' : 'Use Cases'}</h2>
+          <div className="use-cases-grid">
+            <div className="use-case-card">
+              <div className="use-case-icon">🛍️</div>
+              <h3>{lang === 'zh' ? '新品上架' : 'New Product Launch'}</h3>
+              <p>
+                {lang === 'zh'
+                  ? '批量处理新商品的图片，统一命名规范，优化文件大小，快速上架到电商平台。'
+                  : 'Batch process new product images with consistent naming and optimized file sizes for quick listing.'}
+              </p>
+            </div>
+            <div className="use-case-card">
+              <div className="use-case-icon">🔄</div>
+              <h3>{lang === 'zh' ? '图片重构' : 'Image Refactoring'}</h3>
+              <p>
+                {lang === 'zh'
+                  ? '优化现有商品的图片资产，提升页面加载速度，改善 SEO 表现。'
+                  : 'Optimize existing product image assets to improve page load speed and SEO performance.'}
+              </p>
+            </div>
+            <div className="use-case-card">
+              <div className="use-case-icon">🌍</div>
+              <h3>{lang === 'zh' ? '跨境销售' : 'Cross-border Sales'}</h3>
+              <p>
+                {lang === 'zh'
+                  ? '为不同市场准备 SEO 友好的图片文件名，提升搜索引擎可见度。'
+                  : 'Prepare SEO-friendly image filenames for different markets to improve search engine visibility.'}
+              </p>
+            </div>
+            <div className="use-case-card">
+              <div className="use-case-icon">⚡</div>
+              <h3>{lang === 'zh' ? '性能优化' : 'Performance Optimization'}</h3>
+              <p>
+                {lang === 'zh'
+                  ? '压缩图片体积，提升 Core Web Vitals 分数，降低跳出率。'
+                  : 'Compress image sizes to improve Core Web Vitals scores and reduce bounce rates.'}
+              </p>
+            </div>
+          </div>
+        </section>
+
         <section className="footer-seo">
-          <h2>{t.footerSeoTitle}</h2>
+          <h2>{getDynamicText(t.footerSeoTitle)}</h2>
           <p>{t.footerSeoP1}</p>
           <p>{t.footerSeoP2}</p>
-          <p>{t.footerSeoP3}</p>
+          <p>{getDynamicText(t.footerSeoP3)}</p>
         </section>
 
         <section className="faq-section">
@@ -1265,7 +1498,7 @@ const App: React.FC = () => {
                 <span className="faq-icon">{faqOpenId === 'q4' ? '−' : '+'}</span>
               </div>
               {faqOpenId === 'q4' && (
-                <p>{t.faqA4}</p>
+                <p>{getDynamicText(t.faqA4)}</p>
               )}
             </button>
           </div>

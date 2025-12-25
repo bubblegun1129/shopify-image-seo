@@ -113,6 +113,42 @@
   color: #1d1d1f;
 }
 
+.platform-rotating-wrapper {
+  display: inline-block;
+  position: relative;
+  min-width: 140px;
+  text-align: center;
+  vertical-align: bottom;
+}
+
+.platform-rotating {
+  display: inline-block;
+  color: #007AFF;
+  font-weight: 600;
+  position: relative;
+  animation: platformFadeIn 0.8s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  will-change: opacity, transform;
+  backface-visibility: hidden;
+  -webkit-font-smoothing: antialiased;
+}
+
+@keyframes platformFadeIn {
+  0% {
+    opacity: 0;
+    transform: translateY(12px);
+    filter: blur(2px);
+  }
+  60% {
+    opacity: 0.8;
+    transform: translateY(2px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+    filter: blur(0);
+  }
+}
+
 .hero-sub {
   margin: 0;
   font-size: 14px;
@@ -1120,6 +1156,63 @@
   line-height: 1.47059;
 }
 
+/* Use Cases Section */
+.use-cases-section {
+  margin-top: 0;
+}
+
+.use-cases-section h2 {
+  margin: 0 0 40px;
+  font-size: 38px;
+  font-weight: 600;
+  letter-spacing: -0.003em;
+  line-height: 1.1;
+  text-align: center;
+  color: #1d1d1f;
+}
+
+.use-cases-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 20px;
+}
+
+.use-case-card {
+  background-color: #ffffff;
+  border-radius: 20px;
+  padding: 32px 24px;
+  border: 0.5px solid rgba(0, 0, 0, 0.08);
+  text-align: center;
+  transition: all 0.3s ease;
+}
+
+.use-case-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+  border-color: rgba(0, 122, 255, 0.3);
+}
+
+.use-case-icon {
+  font-size: 48px;
+  line-height: 1;
+  margin-bottom: 16px;
+}
+
+.use-case-card h3 {
+  margin: 0 0 12px;
+  font-size: 19px;
+  font-weight: 600;
+  color: #1d1d1f;
+  line-height: 1.381;
+}
+
+.use-case-card p {
+  margin: 0;
+  font-size: 14px;
+  color: #86868b;
+  line-height: 1.47059;
+}
+
 /* Footer SEO */
 .footer-seo {
   font-size: 15px;
@@ -1366,5 +1459,32 @@
   .page-footer {
     padding: 32px 20px;
     margin-top: 60px;
+  }
+
+  .use-cases-section h2 {
+    font-size: 30px;
+    margin-bottom: 32px;
+  }
+
+  .use-cases-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 16px;
+  }
+
+  .use-case-card {
+    padding: 24px 20px;
+  }
+
+  .use-case-icon {
+    font-size: 40px;
+    margin-bottom: 12px;
+  }
+
+  .use-case-card h3 {
+    font-size: 17px;
+  }
+
+  .use-case-card p {
+    font-size: 13px;
   }
 }
