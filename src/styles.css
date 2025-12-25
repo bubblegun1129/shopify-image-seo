@@ -111,14 +111,16 @@
   letter-spacing: -0.003em;
   line-height: 1.07143;
   color: #1d1d1f;
+  white-space: nowrap;
 }
 
 .platform-rotating-wrapper {
   display: inline-block;
   position: relative;
-  min-width: 140px;
+  min-width: 160px;
   text-align: center;
   vertical-align: bottom;
+  white-space: nowrap;
 }
 
 .platform-rotating {
@@ -1366,6 +1368,11 @@
   .hero-heading h1 {
     font-size: 30px;
     line-height: 1.125;
+    white-space: normal;
+  }
+
+  .platform-rotating-wrapper {
+    min-width: 120px;
   }
 
   .hero-sub {

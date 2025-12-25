@@ -852,6 +852,27 @@ const App: React.FC = () => {
     URL.revokeObjectURL(url);
   }, [processed]);
 
+  // 清空所有图片和结果
+  const handleClear = useCallback(() => {
+    // 清理所有预览URL
+    files.forEach((file) => {
+      URL.revokeObjectURL(file.previewUrl);
+    });
+    
+    // 清理所有下载URL
+    processed.forEach((item) => {
+      if (item.downloadUrl) {
+        URL.revokeObjectURL(item.downloadUrl);
+      }
+    });
+    
+    setFiles([]);
+    setProcessed([]);
+    setKeyword('');
+    setMessage(null);
+    setAiCompletedItemIds(new Set());
+  }, [files, processed]);
+
   const downloadSingle = useCallback(
     (item: ProcessedImage) => {
       const a = document.createElement('a');
@@ -1338,6 +1359,15 @@ const App: React.FC = () => {
             >
               {isProcessing ? t.messageProcessing : hasProcessedImages ? t.downloadAll : t.processButton}
             </button>
+            {(files.length > 0 || processed.length > 0) && (
+              <button
+                type="button"
+                className="btn-outline"
+                onClick={handleClear}
+              >
+                {t.clear}
+              </button>
+            )}
           </div>
         </section>
 
